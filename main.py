@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 import argparse
 
 def main():
@@ -15,7 +16,8 @@ def main():
     # Now we can access `args.user_prompt`
 
     client = genai.Client(api_key=api_key)
-    gemini_content = client.models.generate_content(model="gemini-2.5-flash", contents=args.user_prompt)
+    messages = [types.Content(role="user", parts=[types.Part(text=args.user_prompt)])]
+    gemini_content = client.models.generate_content(model="gemini-2.5-flash", contents=messages)
     if gemini_content.usage_metadata == None:
         raise RuntimeError("Failed API request.")
     else:
