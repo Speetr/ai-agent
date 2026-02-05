@@ -4,6 +4,8 @@ from google import genai
 from google.genai import types
 import argparse
 from prompts import system_prompt
+from functions.call_function import available_functions
+from functions.get_files_info import get_files_info, schema_get_files_info
 
 def main():
     load_dotenv()
@@ -22,7 +24,10 @@ def main():
     gemini_content = client.models.generate_content(
         model="gemini-2.5-flash", 
         contents=messages,
-        config=types.GenerateContentConfig(system_instruction=system_prompt, temperature=0)
+        config=types.GenerateContentConfig(
+            tools=[available_functions],
+            system_instruction=system_prompt
+            )
         )
 
     if gemini_content.usage_metadata == None:
@@ -32,7 +37,12 @@ def main():
             print(f"User prompt: {args.user_prompt}")
             print(f"Prompt tokens: {gemini_content.usage_metadata.prompt_token_count}")
             print(f"Response tokens: {gemini_content.usage_metadata.candidates_token_count}")
-    print(f"Response: {gemini_content.text}")
+
+    if gemini_content.function_calls:
+        for function_call in gemini_content.function_calls:
+            print(f"Calling function: {function_call.name}({function_call.args})")
+    else:
+        print(gemini_content.text)
 
 
 if __name__ == "__main__":
